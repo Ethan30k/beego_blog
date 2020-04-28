@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"boogo_blog/controllers"
+	"beego_blog/controllers"
 	"github.com/astaxie/beego"
 )
 
