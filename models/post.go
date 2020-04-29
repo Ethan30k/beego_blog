@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"strings"
 	"time"
 )
 
@@ -60,4 +62,27 @@ func (post *Post)Update(fields ...string) error {
 		return err
 	}
 	return nil
+}
+
+func (post *Post)TagsLink() string {
+	if post.Tags == "" {
+		return ""
+	}
+	tagslink := strings.Trim(post.Tags, ",")
+	return tagslink
+}
+
+func (post *Post)Link() string {
+	return ""
+}
+
+func (post *Post)ColorTitle() string {
+	if post.Color != ""{
+		return fmt.Sprintf("<span style='color:%s'>%s</span>", post.Color, post.Title)
+	}
+	return post.Title
+}
+
+func (post *Post)Excerpt() string {
+	return post.Content
 }
