@@ -1,5 +1,10 @@
 package models
 
+import (
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
+)
+
 //碎言碎语
 type Mood struct {
 	Id int
@@ -8,5 +13,43 @@ type Mood struct {
 	//封面路径
 	Cover string `orm:"size(70)"`
 	//发布时间
-	Posttime string `orm:"size(datetime)"`
+	Posttime string `orm:"type(datetime)"`
+}
+
+func (mood *Mood)TableName() string {
+	//从配置文件中获取表的前缀
+	dbprefix := beego.AppConfig.String("dbprefix")
+	return dbprefix + "mood"
+}
+
+//插入
+func (mood *Mood) Insert() error{
+	if _, err := orm.NewOrm().Insert(mood);err != nil{
+		return err
+	}
+	return nil
+}
+
+//删除
+func (mood *Mood)Delete() error {
+	if _, err := orm.NewOrm().Delete(mood);err !=nil{
+		return err
+	}
+	return nil
+}
+
+//读取
+func (mood *Mood)Read(fields ...string) error {
+	if err := orm.NewOrm().Read(mood, fields...);err !=nil{
+		return err
+	}
+	return nil
+}
+
+//读取
+func (mood *Mood)Update(fields ...string) error {
+	if err := orm.NewOrm().Read(mood, fields...);err !=nil{
+		return err
+	}
+	return nil
 }
