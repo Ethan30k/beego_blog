@@ -35,7 +35,7 @@ func (tag *Tag)Read(fields ...string) error {
 
 //更新
 func (tag *Tag)Update(fields ...string) error {
-	if err := orm.NewOrm().Read(tag, fields...);err !=nil{
+	if _,err := orm.NewOrm().Update(tag, fields...);err !=nil{
 		return err
 	}
 	return nil

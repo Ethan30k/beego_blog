@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -58,7 +59,7 @@ func (post *Post)Read(fields ...string) error {
 
 //更新
 func (post *Post)Update(fields ...string) error {
-	if err := orm.NewOrm().Read(post, fields...);err !=nil{
+	if _, err := orm.NewOrm().Update(post, fields...);err !=nil{
 		return err
 	}
 	return nil
@@ -73,7 +74,7 @@ func (post *Post)TagsLink() string {
 }
 
 func (post *Post)Link() string {
-	return ""
+	return "/article/"+strconv.Itoa(post.Id)
 }
 
 func (post *Post)ColorTitle() string {
@@ -85,4 +86,22 @@ func (post *Post)ColorTitle() string {
 
 func (post *Post)Excerpt() string {
 	return post.Content
+}
+
+//根据当前文章获取上一篇与下一篇文章
+func (this *Post)GetPreAndNext() (pre, next *Post) {
+	//上一篇文章
+	pre = &Post{}
+	err := orm.NewOrm().QueryTable(new(Post)).OrderBy("-id").Filter("id__lt", this.Id).Filter("status", 0).Limit(1).One(pre)
+	if err!=nil{
+		pre=nil
+	}
+
+	//下一篇文章
+	next = &Post{}
+	err = orm.NewOrm().QueryTable(new(Post)).OrderBy("id").Filter("id__gt", this.Id).Filter("status", 0).Limit(1).One(next)
+	if err!=nil{
+		next=nil
+	}
+	return
 }

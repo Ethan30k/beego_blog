@@ -46,7 +46,7 @@ func (tagpost *TagPost)Delete() error {
 
 //更新
 func (tagpost *TagPost)Update(fields ...string) error {
-	if err := orm.NewOrm().Read(tagpost, fields...);err !=nil{
+	if _,err := orm.NewOrm().Update(tagpost, fields...);err !=nil{
 		return err
 	}
 	return nil
