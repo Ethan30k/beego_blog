@@ -21,7 +21,7 @@ func (this *MainController)Prepare()  {
 		page =1
 		fmt.Println(err)
 	}
-	this.Pager = models.NewPager(page,2,0,"")
+	this.Pager = models.NewPager(page,3,0,"")
 }
 
 //首页
@@ -75,6 +75,8 @@ func (this *MainController) display(tplname string) {
 		this.LayoutSections["banner"] = "double/banner.html"
 		this.LayoutSections["middle"] = "double/middle.html"
 		this.LayoutSections["right"] = "double/right.html"
+	}else if tplname == "life"{
+		this.LayoutSections["right"] = "double/right.html"
 	}
 }
 
@@ -112,4 +114,38 @@ func (this *MainController)Show()  {
 	this.Data["next"] = next
 	this.display("article")
 	this.Data["smalltitle"] = "文章详情"
+}
+
+func (this *MainController)Life() {
+	var list []*models.Post
+	post := models.Post{}
+	//获得文章表的句柄，并设置过滤条件（正常状态的文章）
+	query := orm.NewOrm().QueryTable(&post).Filter("status", 0)
+
+	//获得符合条件的记录数
+	count, _ := query.Count()
+
+	//设置总的数量
+	this.Pager.SetTotalnum(int(count))
+	//设置每页对应的路径
+	this.Pager.SetUrlpath("/life%d.html")
+
+	if count >0 {
+		offset := (this.Pager.Page - 1) * this.Pager.Pagesize
+		_, err := query.OrderBy("-istop", "-views").Limit(this.Pager.Pagesize, offset).All(&list)
+		if err != nil{
+			fmt.Println("err=",err)
+		}
+	}
+
+	this.Data["list"] = list
+	this.Data["pagebar"] = this.Pager.ToString()
+	this.setRight()
+	this.display("life")
+	this.setHeadMeater()
+}
+
+func (this *MainController) About() {
+	this.setHeadMeater()
+	this.display("about")
 }

@@ -13,4 +13,12 @@ func init() {
     //文章详情
     //  /article/2
     beego.Router("/article/:id:int", &controllers.MainController{},"*:Show")
+
+    //成长录
+    beego.Router("/life.html", &controllers.MainController{},"*:Life")
+    //成长录分页
+    beego.Router("/life:page:int.html", &controllers.MainController{},"*:Life")
+
+    //关于我
+    beego.Router("/about.html", &controllers.MainController{},"*:About")
 }
