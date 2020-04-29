@@ -50,6 +50,12 @@ func (this *MainController) Index() {
 
 	this.Data["list"] = list
 	this.Data["pagebar"] = this.Pager.ToString()
+	//最新文章
+	this.Data["latestblog"] = models.GetLatestBlog()
+	//浏览量最多的4篇文章
+	this.Data["hotblog"] = models.GetHotBlog()
+	//友情链接
+	this.Data["links"] = models.GetLinks()
 
 	this.Layout = "double/layout.html"
 	this.TplName = "double/index.html"

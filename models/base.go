@@ -22,3 +22,43 @@ func init() {
 	//register model
 	orm.RegisterModel(new(Link), new(Mood), new(Post), new(Tag), new(TagPost), new(User))
 }
+
+//查询最新的4篇文章
+func GetLatestBlog() []*Post {
+	post:= Post{}
+	//从文章表中过滤出状态正常的文章
+	query := orm.NewOrm().QueryTable(&post).Filter("status", 0)
+	//查询数量
+	count, _ := query.Count()
+	var result []*Post
+	if count >0{
+		query.OrderBy("-posttime").Limit(4).All(&result)
+	}
+	return result
+}
+
+//查询最新的4篇文章
+func GetHotBlog() []*Post {
+	post:= Post{}
+	//从文章表中过滤出状态正常的文章
+	query := orm.NewOrm().QueryTable(&post).Filter("status", 0)
+	//查询数量
+	count, _ := query.Count()
+	var result []*Post
+	if count >0{
+		query.OrderBy("-views").Limit(4).All(&result)
+	}
+	return result
+}
+
+//友情链接
+func GetLinks() []*Link {
+	link := Link{}
+	query := orm.NewOrm().QueryTable(&link)
+	count, _ := query.Count()
+	var result []*Link
+	if count >0 {
+		query.OrderBy("-rank").All(&result)
+	}
+	return result
+}
