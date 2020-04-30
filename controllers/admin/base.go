@@ -13,6 +13,7 @@ type baseController struct {
 	username       string
 	controllerName string
 	actionName     string
+	pager *models.Pager
 }
 
 func (this *baseController) Prepare() {
@@ -24,6 +25,12 @@ func (this *baseController) Prepare() {
 	this.actionName = strings.ToLower(this.actionName)
 
 	this.auth()
+	page, err := this.GetInt("page")
+	if err != nil{
+		page =1
+	}
+	pagesize :=2
+	this.pager = models.NewPager(page,pagesize,0,"")
 }
 
 func (this *baseController) auth() {
@@ -62,4 +69,17 @@ func (this *baseController) display(tplname ...string) {
 	} else {
 		this.TplName = modileName + this.controllerName + "_" + this.actionName + ".html"
 	}
+}
+
+func (this *baseController)showmsg(msg ...string)  {
+	if len(msg) ==0{
+		msg = append(msg, "出错了")
+	}
+	//拼接上一个页面的地址
+	msg = append(msg, this.Ctx.Request.Referer())
+	this.Data["msg"] = msg[0]
+	this.Data["redirect"] = msg[1]
+	this.display("showmsg")
+	this.Render()
+	this.StopRun()
 }

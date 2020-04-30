@@ -29,6 +29,17 @@ func init() {
 	//首页
     beego.Router("/admin",&admin.IndexController{}, "*:Index")
 
+    /*-----------------------------------登录页面------------------------------------------------*/
 	//登陆
 	beego.Router("/admin/login", &admin.AccountController{}, "*:Login")
+
+	/*-----------------------------------说说管理------------------------------------------------*/
+	beego.Router("/admin/mood/list", &admin.MoodController{}, "*:List")
+	beego.Router("/admin/mood/delete", &admin.MoodController{}, "*:Delete")
+	beego.Router("/admin/mood/add", &admin.MoodController{}, "*:Add")
+
+	/*-----------------------------------用户管理--------------------------------------------------*/
+	beego.Router("/admin/user/list", &admin.UserController{}, "*:List")
+	beego.Router("/admin/user/delete", &admin.UserController{}, "*:Delete")
+	beego.Router("/admin/user/edit", &admin.UserController{}, "*:Edit")
 }
