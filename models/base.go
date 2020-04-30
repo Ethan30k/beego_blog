@@ -1,6 +1,8 @@
 package models
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
@@ -61,4 +63,15 @@ func GetLinks() []*Link {
 		query.OrderBy("-rank").All(&result)
 	}
 	return result
+}
+
+//md5哈希
+func MD5(buf []byte) string {
+	//创建哈希对象
+	mymd5 := md5.New()
+	//将待加密数据写入哈希对象
+	mymd5.Write(buf)
+	//获取哈希值
+	result := mymd5.Sum(nil)
+	return fmt.Sprintf("%x", result)
 }

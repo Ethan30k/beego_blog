@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 //碎言碎语
@@ -13,7 +14,7 @@ type Mood struct {
 	//封面路径
 	Cover string `orm:"size(70)"`
 	//发布时间
-	Posttime string `orm:"type(datetime)"`
+	Posttime time.Time `orm:"type(datetime)"`
 }
 
 func (mood *Mood) TableName() string {

@@ -13,15 +13,15 @@ type MainController struct {
 	Pager *models.Pager
 }
 
-func (this *MainController)Prepare()  {
+func (this *MainController) Prepare() {
 	var page int
 	var err error
 	page, err = strconv.Atoi(this.Ctx.Input.Param(":page"))
-	if err!=nil{
-		page =1
+	if err != nil {
+		page = 1
 		fmt.Println(err)
 	}
-	this.Pager = models.NewPager(page,3,0,"")
+	this.Pager = models.NewPager(page, 3, 0, "")
 }
 
 //首页
@@ -39,11 +39,11 @@ func (this *MainController) Index() {
 	//设置每页对应的路径
 	this.Pager.SetUrlpath("/index%d.html")
 
-	if count >0 {
+	if count > 0 {
 		offset := (this.Pager.Page - 1) * this.Pager.Pagesize
 		_, err := query.OrderBy("-istop", "-views").Limit(this.Pager.Pagesize, offset).All(&list)
-		if err != nil{
-			fmt.Println("err=",err)
+		if err != nil {
+			fmt.Println("err=", err)
 		}
 	}
 
@@ -66,41 +66,41 @@ func (this *MainController) setRight() {
 
 func (this *MainController) display(tplname string) {
 	this.Layout = "double/layout.html"
-	this.TplName = "double/"+tplname+".html"
+	this.TplName = "double/" + tplname + ".html"
 	this.LayoutSections = make(map[string]string)
 	this.LayoutSections["head"] = "double/head.html"
 	this.LayoutSections["foot"] = "double/foot.html"
 
-	if tplname == "index"{
+	if tplname == "index" {
 		this.LayoutSections["banner"] = "double/banner.html"
 		this.LayoutSections["middle"] = "double/middle.html"
 		this.LayoutSections["right"] = "double/right.html"
-	}else if tplname == "life"{
+	} else if tplname == "life" {
 		this.LayoutSections["right"] = "double/right.html"
 	}
 }
 
 //设置头部信息
-func (this *MainController)setHeadMeater()  {
+func (this *MainController) setHeadMeater() {
 	this.Data["title"] = beego.AppConfig.String("title")
 	this.Data["keywords"] = beego.AppConfig.String("keywords")
 	this.Data["description"] = beego.AppConfig.String("description")
 }
 
 //通过文章id查看文章详情
-func (this *MainController)Show()  {
+func (this *MainController) Show() {
 	//获取文章id并转换整数
 	id, err := strconv.Atoi(this.Ctx.Input.Param(":id"))
-	if err!= nil{
-		this.Redirect("/404",302)
+	if err != nil {
+		this.Redirect("/404", 302)
 	}
 	//创建文章结构体
 	post := new(models.Post)
 	post.Id = id
 	//查询文章
 	err = post.Read()
-	if err != nil{
-		this.Redirect("/404",302)
+	if err != nil {
+		this.Redirect("/404", 302)
 	}
 	//浏览量+1
 	post.Views++
@@ -116,7 +116,7 @@ func (this *MainController)Show()  {
 	this.Data["smalltitle"] = "文章详情"
 }
 
-func (this *MainController)Life() {
+func (this *MainController) Life() {
 	var list []*models.Post
 	post := models.Post{}
 	//获得文章表的句柄，并设置过滤条件（正常状态的文章）
@@ -130,11 +130,11 @@ func (this *MainController)Life() {
 	//设置每页对应的路径
 	this.Pager.SetUrlpath("/life%d.html")
 
-	if count >0 {
+	if count > 0 {
 		offset := (this.Pager.Page - 1) * this.Pager.Pagesize
 		_, err := query.OrderBy("-istop", "-views").Limit(this.Pager.Pagesize, offset).All(&list)
-		if err != nil{
-			fmt.Println("err=",err)
+		if err != nil {
+			fmt.Println("err=", err)
 		}
 	}
 
@@ -148,4 +148,19 @@ func (this *MainController)Life() {
 func (this *MainController) About() {
 	this.setHeadMeater()
 	this.display("about")
+}
+
+//碎言碎语
+func (this *MainController) Mood() {
+	var list []*models.Mood
+	query := orm.NewOrm().QueryTable(new(models.Mood))
+	count, _ := query.Count()
+
+	if count > 0 {
+		query.OrderBy("-posttime").All(&list)
+	}
+	this.Data["list"] = list
+	this.Data["pagebar"] = this.Pager.ToString()
+	this.setHeadMeater()
+	this.display("mood")
 }
