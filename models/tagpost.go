@@ -17,7 +17,7 @@ type TagPost struct {
 func (tagpost *TagPost)TableName() string {
 	//从配置文件中获取表的前缀
 	dbprefix := beego.AppConfig.String("dbprefix")
-	return dbprefix + "tagpost"
+	return dbprefix + "tag_post"
 }
 
 //插入
