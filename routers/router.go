@@ -58,4 +58,9 @@ func init() {
 	beego.Router("/admin/article/save", &admin.ArticleController{}, "*:Save")
 	beego.Router("/admin/article/delete", &admin.ArticleController{}, "*:Delete")
 	beego.Router("/admin/article/batch", &admin.ArticleController{}, "*:Batch")
+	beego.Router("/admin/article/edit", &admin.ArticleController{}, "*:Edit")
+	beego.Router("/admin/article/update", &admin.ArticleController{}, "*:Update")
+
+	/*------------------------------------标签管理--------------------------------------------------*/
+	beego.Router("/admin/tag", &admin.TagController{}, "*:List")
 }

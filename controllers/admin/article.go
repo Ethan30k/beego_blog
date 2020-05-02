@@ -122,7 +122,7 @@ func (this *ArticleController) Save() {
 		this.showmsg("文章添加失败")
 	}
 
-	//处理标签
+	//二、处理标签
 	//存储去重后的结果
 	addtags := make([]string, 0)
 	if tags != "" {
@@ -154,13 +154,13 @@ func (this *ArticleController) Save() {
 	//三、将结果切片中的标签插入标签表
 	if len(addtags) > 0 {
 		//遍历结果标签
-		for _,v := range addtags {
+		for _, v := range addtags {
 			//创建标签对象，并初始化标签名称
 			tag := &models.Tag{Name: v}
-			if err := tag.Read("Name");err == orm.ErrNoRows{
-				tag.Count =1
+			if err := tag.Read("Name"); err == orm.ErrNoRows {
+				tag.Count = 1
 				tag.Insert()
-			}else {
+			} else {
 				//该标签下的文章数量+1
 				tag.Count += 1
 				//更新count字段
@@ -172,7 +172,7 @@ func (this *ArticleController) Save() {
 			//插入标签文章对象
 			tp.Insert()
 		}
-		post.Tags=","+strings.Join(addtags,",") +","
+		post.Tags = "," + strings.Join(addtags, ",") + ","
 	}
 	post.Updated = time.Now()
 	post.Update("tags", "updated")
@@ -186,7 +186,7 @@ func (this *ArticleController) Delete() {
 	//创建文章结构体并初始化id
 	post := &models.Post{Id: id}
 
-	if post.Read() == nil{
+	if post.Read() == nil {
 		post.Delete()
 	}
 	this.Redirect("/admin/article/list", 302)
@@ -200,8 +200,8 @@ func (this *ArticleController) Batch() {
 	idarr := make([]int, 0)
 
 	//遍历获取到的文章
-	for _,v :=range ids{
-		if id,_ :=strconv.Atoi(v);id >0 {
+	for _, v := range ids {
+		if id, _ := strconv.Atoi(v); id > 0 {
 			//将转换后的结果追加在结果切片中
 			idarr = append(idarr, id)
 		}
@@ -213,20 +213,20 @@ func (this *ArticleController) Batch() {
 	switch op {
 	//移至已发布
 	case "topub":
-		query.Filter("id__in", ids).Update(orm.Params{"status":0})
-	//移至草稿箱
+		query.Filter("id__in", ids).Update(orm.Params{"status": 0})
+		//移至草稿箱
 	case "todrafts":
-		query.Filter("id__in", ids).Update(orm.Params{"status":1})
-	//移至回收站
+		query.Filter("id__in", ids).Update(orm.Params{"status": 1})
+		//移至回收站
 	case "totrash":
-		query.Filter("id__in", ids).Update(orm.Params{"status":2})
-	//删除
+		query.Filter("id__in", ids).Update(orm.Params{"status": 2})
+		//删除
 	case "delete":
-		for _,id :=range idarr {
+		for _, id := range idarr {
 			//创建文章结构体，并初始化ID
 			obj := models.Post{Id: id}
 			//查询
-			if obj.Read() == nil{
+			if obj.Read() == nil {
 				//删除
 				obj.Delete()
 			}
@@ -234,4 +234,146 @@ func (this *ArticleController) Batch() {
 	}
 	//重定向到上一个页面
 	this.Redirect(this.Ctx.Request.Referer(), 302)
+}
+
+//编辑页面（跳转到文章编辑页面）
+func (this *ArticleController) Edit() {
+	//获取需要被编辑的文章id
+	id, _ := this.GetInt("id")
+	post := &models.Post{Id: id}
+	if post.Read() != nil {
+		this.showmsg("未找到该篇文章")
+	}
+	//去除标签前后的英文逗号
+	post.Tags = strings.Trim(post.Tags, ",")
+	this.Data["post"] = post
+	//将文章发布时间转换为字符串
+	this.Data["posttime"] = post.Posttime.Format("2020-05-02 19:58:11")
+	this.display()
+}
+
+//更新文章
+/*
+思路：
+第一种情况：需要判断用户是否修改了标签，如果没有修改，直接更新文章表
+第二种情况：如果修改了标签，则需要更新标签文章表和标签表，首先我们需要判断修改之前该文章的标签是否为空，如果不为空，则将标签文章中的
+相关记录删除，更新标签表中对应的count字段，然后需要处理用户输入的新标签，也就是去除新标签两边的空格，去除重复标签等等，
+在标签中如果没有对应的标签则创建该标签，如果已经存在该标签则更新count字段，最后在标签文章中插入对应的记录
+*/
+func (this *ArticleController) Update() {
+	//创建文章结构体
+	var post models.Post
+	//获取文章id
+	id, err := this.GetInt("id")
+	//处理错误
+	if err != nil {
+		this.showmsg("文章不存在！")
+	}
+	post.Id = id
+	//通过id查询文章
+	if post.Read() != nil {
+		this.Redirect("/admin/article/list", 302)
+	}
+	post.Title = strings.TrimSpace(this.GetString("title"))
+	if post.Title == "" {
+		this.showmsg("标题不能为空")
+	}
+	post.Color = strings.TrimSpace(this.GetString("color"))
+	post.Istop, _ = this.GetInt("istop")
+	tags := strings.TrimSpace(this.GetString("tags"))
+	timestr := strings.TrimSpace(this.GetString("posttime"))
+	//将字符串时间转化为time类型
+	if posttime, err := time.Parse("2020-05-02 19:58:11", timestr); err == nil {
+		post.Posttime = posttime
+	}
+	post.Status, _ = this.GetInt("status")
+	post.Content = this.GetString("content")
+	//修改文章的修改时间
+	post.Updated = time.Now()
+
+	/*-------------------第一种情况---------------------*/
+	//用户没有修改文章所属标签
+	if strings.Trim(post.Tags, ",") == tags {
+		post.Update("title", "color", "istop", "posttime", "status", "content", "updated")
+		this.Redirect("/admin/article/list", 302)
+	}
+
+	/*-------------------第二种情况---------------------*/
+	if post.Tags != "" {
+		var tagpost models.TagPost
+		//获得标签文章表的句柄并通过文章id进行过滤
+		query := orm.NewOrm().QueryTable(&tagpost).Filter("postid", post.Id)
+		//用于存储查询结果
+		var tagpostarr []*models.TagPost
+		if n, err := query.All(&tagpostarr); n > 0 && err == nil {
+			//遍历tagpostarr
+			for i := 0; i < len(tagpostarr); i++ {
+				//去除tagid对新创建的标签对象赋值
+				var tag = &models.Tag{Id: tagpostarr[i].Tagid}
+				//通过id查询标签，如果没有出现错误且count字段大于0
+				if err=tag.Read();err == nil&&tag.Count>0{
+					tag.Count--
+					tag.Update("count")
+				}
+			}
+		}
+		//在标签文章表中删除对应的记录
+		query.Delete()
+	}
+
+	//处理标签
+	//存储去重后的结果
+	addtags := make([]string, 0)
+	if tags != "" {
+		//将中文的逗号全部替换为英文的逗号
+		tags = strings.Replace(tags, "，", ",", -1)
+		//通过英文逗号切割标签
+		tagarr := strings.Split(tags, ",")
+		//遍历存储标签的切片
+		for _, v := range tagarr {
+			if tag := strings.TrimSpace(v); tag != "" {
+				//定义标志，默认没有重复标签
+				exists := false
+				for _, vv := range addtags {
+					//有重复标签
+					if vv == tag {
+						exists = true
+						//退出循环
+						break
+					}
+				}
+				//没有重复标签，则将tag追加到结果切片中
+				if !exists {
+					addtags = append(addtags, tag)
+				}
+			}
+		}
+	}
+
+	//将结果切片中的标签插入标签表
+	if len(addtags) > 0 {
+		//遍历结果标签
+		for _, v := range addtags {
+			//创建标签对象，并初始化标签名称
+			tag := &models.Tag{Name: v}
+			if err := tag.Read("Name"); err == orm.ErrNoRows {
+				tag.Count = 1
+				tag.Insert()
+			} else {
+				//该标签下的文章数量+1
+				tag.Count += 1
+				//更新count字段
+				tag.Update("Count")
+			}
+
+			//创建标签文章对象，并初始化各个字段
+			tp := &models.TagPost{Tagid: tag.Id, Postid: post.Id, Poststatus: post.Status, Posttime: post.Posttime}
+			//插入标签文章对象
+			tp.Insert()
+		}
+		post.Tags = "," + strings.Join(addtags, ",") + ","
+	}
+	post.Update("title", "color", "istop", "posttime", "status", "content", "updated","tags")
+	this.Redirect("/admin/article/list", 302)
+
 }
